@@ -23,6 +23,9 @@ public class WormyHealth : MonoBehaviour
         {
             health = maxHealth;
         }
+        if (health <= 0) {
+            Destroy(gameObject);
+        }
         txtHealth.text = health.ToString();
     }
 }

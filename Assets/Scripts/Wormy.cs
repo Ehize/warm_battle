@@ -1,9 +1,16 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using UnityStandardAssets.CrossPlatformInput;
 
-public class Wormy : MonoBehaviour
+public class Wormy : Photon.MonoBehaviour
 {
+    protected Joystick joystick;
+    protected Joybutton joybutton;
+
+    public PhotonView photonView;
+
     public Rigidbody2D bulletPrefab;
     public Transform currentGun;
 
@@ -11,7 +18,7 @@ public class Wormy : MonoBehaviour
     public float maxRelativeVelocity;
     public float misileForce = 5; 
 
-    public bool IsTurn { get { return WormyManager.singleton.IsMyTurn(wormId); } }
+    //public bool IsTurn { get { return WormyManager.singleton.IsMyTurn(wormId); } }
 
     public int wormId;
     WormyHealth wormyHealth;
@@ -19,18 +26,24 @@ public class Wormy : MonoBehaviour
 
     private void Start()
     {
+        joystick = FindObjectOfType<Joystick>();
+        joybutton = FindObjectOfType<Joybutton>();
+
         wormyHealth = GetComponent<WormyHealth>();
         ren = GetComponent<SpriteRenderer>();
     }
 
     private void Update()
     {
-        if (!IsTurn)
-            return;
+        if (photonView.isMine) 
+        {
+         //Mobile touch
+        if (Input.touchCount > 0 && Input.touches[0].phase == TouchPhase.Began)
+        {
+             Camera.main.ScreenToWorldPoint(Input.touches[0].position);
+        }
 
-        RotateGun();
-
-        var hor = Input.GetAxis("Horizontal");
+        var hor = CrossPlatformInputManager.GetAxis("Horizontal");
         if (hor == 0)
         {
             currentGun.gameObject.SetActive(true);
@@ -38,6 +51,7 @@ public class Wormy : MonoBehaviour
             ren.flipX = currentGun.eulerAngles.z < 180;
 
             if (Input.GetKeyDown(KeyCode.Q))
+            // if (joybutton.Pressed)
             {
                 var p = Instantiate(bulletPrefab,
                                    currentGun.position - currentGun.right,
@@ -45,8 +59,9 @@ public class Wormy : MonoBehaviour
 
                 p.AddForce(-currentGun.right * misileForce, ForceMode2D.Impulse);
 
-                if (IsTurn)
+               /* if (IsTurn)
                     WormyManager.singleton.NextWorm();
+                    */
             }
         }
         else
@@ -56,10 +71,22 @@ public class Wormy : MonoBehaviour
                                 hor *
                                 Time.deltaTime *
                                 wormySpeed;            
-             ren.flipX = Input.GetAxis("Horizontal") > 0;
+            // ren.flipX = Input.GetAxis("Horizontal") > 0;
+            ren.flipX = CrossPlatformInputManager.GetAxis("Horizontal") > 0;
         }
 
 
+            RotateGun();
+        }
+       
+
+        /*if (!IsTurn)
+              return; */
+
+        // RotateGun();
+
+        // var hor = Input.GetAxis("Horizontal");
+       
     }
 
     void RotateGun()
@@ -76,8 +103,8 @@ public class Wormy : MonoBehaviour
         if (collision.relativeVelocity.magnitude > maxRelativeVelocity)
         {
             wormyHealth.ChangeHealth(-3);
-            if (IsTurn)
-                WormyManager.singleton.NextWorm();
+           /* if (IsTurn)
+                WormyManager.singleton.NextWorm(); */
         }  
     }
 
@@ -86,8 +113,8 @@ public class Wormy : MonoBehaviour
         if (collision.CompareTag("Explosion"))
         {
             wormyHealth.ChangeHealth(-10);
-            if (IsTurn)
-                WormyManager.singleton.NextWorm();
+           /* if (IsTurn)
+                WormyManager.singleton.NextWorm(); */
         }
             
     }
